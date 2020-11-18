@@ -79,8 +79,7 @@ export UNO_UITEST_PLATFORM=Android
 export UNO_UITEST_ANDROIDAPK_PATH=$BUILD_SOURCESDIRECTORY/build/uitests-android-build/android/uno.platform.unosampleapp-Signed.apk
 
 export UNO_ORIGINAL_TEST_RESULTS=$BUILD_SOURCESDIRECTORY/build/TestResult-original.xml
-export UNO_RERUN_TEST_RESULTS=$BUILD_SOURCESDIRECTORY/build/TestResult-failed-rerun.xml
-export UNO_TESTS_FAILED_LIST=$BUILD_SOURCESDIRECTORY/build/failed-tests.txt
+export UNO_TESTS_FAILED_LIST=$BUILD_SOURCESDIRECTORY/build/uitests-failure-results/failed-tests-android-$ANDROID_SIMULATOR_APILEVEL-$SCREENSHOTS_FOLDERNAME.txt
 
 cp $UNO_UITEST_ANDROIDAPK_PATH $BUILD_ARTIFACTSTAGINGDIRECTORY
 
@@ -95,6 +94,12 @@ mkdir -p $UNO_UITEST_SCREENSHOT_PATH
 # required by Xamarin.UITest
 cd $UNO_UITEST_SCREENSHOT_PATH
 
+if [ -f "$UNO_TESTS_FAILED_LIST" ]; then
+    export UNO_TESTS_NUNIT_FILTER="--testlist "$UNO_TESTS_FAILED_LIST""
+else
+    export UNO_TESTS_NUNIT_FILTER="--where \"$TEST_FILTERS\""
+fi
+
 mono $BUILD_SOURCESDIRECTORY/build/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/nunit3-console.exe \
 	--trace=Verbose \
 	--framework=mono \
@@ -103,7 +108,7 @@ mono $BUILD_SOURCESDIRECTORY/build/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/nuni
 	--workers=1 \
 	--result=$UNO_ORIGINAL_TEST_RESULTS \
 	--timeout=120000 \
-	--where "$TEST_FILTERS" \
+	$UNO_TESTS_NUNIT_FILTER \
 	$BUILD_SOURCESDIRECTORY/src/SamplesApp/SamplesApp.UITests/bin/$BUILDCONFIGURATION/net47/SamplesApp.UITests.dll \
 	|| true
 
@@ -112,29 +117,3 @@ $ANDROID_HOME/platform-tools/adb shell logcat -d > $BUILD_ARTIFACTSTAGINGDIRECTO
 pushd $BUILD_SOURCESDIRECTORY/src/Uno.NUnitTransformTool
 dotnet run list-failed $UNO_ORIGINAL_TEST_RESULTS $UNO_TESTS_FAILED_LIST
 popd
-
-if [ -n "`cat $UNO_TESTS_FAILED_LIST`" ]; then
-	# Rerun failed tests
-	echo Retrying failed tests
-
-	# Restart the emulator to avoid lingering emulator state isses
-	$ANDROID_HOME/platform-tools/adb reboot
-
-	# Wait for the emulator to finish booting
-	$BUILD_SOURCESDIRECTORY/build/android-uitest-wait-systemui.sh
-
-	mono $BUILD_SOURCESDIRECTORY/build/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/nunit3-console.exe \
-		--trace=Verbose \
-		--framework=mono \
-		--inprocess \
-		--agents=1 \
-		--workers=1 \
-		--result=$UNO_RERUN_TEST_RESULTS \
-		--timeout=300000 \
-		--testlist $UNO_TESTS_FAILED_LIST \
-		$BUILD_SOURCESDIRECTORY/src/SamplesApp/SamplesApp.UITests/bin/$BUILDCONFIGURATION/net47/SamplesApp.UITests.dll \
-		|| true
-fi
-
-$ANDROID_HOME/platform-tools/adb shell logcat -d > $BUILD_ARTIFACTSTAGINGDIRECTORY/screenshots/$SCREENSHOTS_FOLDERNAME/android-device-log.2.txt
-

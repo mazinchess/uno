@@ -84,12 +84,18 @@ cd $UNO_UITEST_SCREENSHOT_PATH
 
 export UNO_ORIGINAL_TEST_RESULTS=$BUILD_SOURCESDIRECTORY/build/TestResult-original.xml
 export UNO_RERUN_TEST_RESULTS=$BUILD_SOURCESDIRECTORY/build/TestResult-failed-rerun.xml
-export UNO_TESTS_FAILED_LIST=$BUILD_SOURCESDIRECTORY/build/failed-tests.txt
+export UNO_TESTS_FAILED_LIST=$BUILD_SOURCESDIRECTORY/build/uitests-failure-results/failed-tests-ios-$SCREENSHOTS_FOLDERNAME.txt
+
+if [ -f "$UNO_TESTS_FAILED_LIST" ]; then
+    export UNO_TESTS_NUNIT_FILTER="--testlist "$UNO_TESTS_FAILED_LIST""
+else
+    export UNO_TESTS_NUNIT_FILTER="--where \"$TEST_FILTERS\""
+fi
 
 mono $BUILD_SOURCESDIRECTORY/build/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/nunit3-console.exe \
 	--result=$UNO_ORIGINAL_TEST_RESULTS \
 	--timeout=120000 \
-	--where "$TEST_FILTERS" \
+	$UNO_TESTS_NUNIT_FILTER \
 	$BUILD_SOURCESDIRECTORY/src/SamplesApp/SamplesApp.UITests/bin/Release/net47/SamplesApp.UITests.dll \
 	|| true
 
@@ -97,19 +103,3 @@ mono $BUILD_SOURCESDIRECTORY/build/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/nuni
 pushd $BUILD_SOURCESDIRECTORY/src/Uno.NUnitTransformTool
 dotnet run list-failed $UNO_ORIGINAL_TEST_RESULTS $UNO_TESTS_FAILED_LIST
 popd
-
-if [ -n "`cat $UNO_TESTS_FAILED_LIST`" ]; then
-
-	# Rerun failed tests
-	echo Retrying failed tests
-
-	echo Terminating Simulator instance
-	killall Simulator || echo "Simulator was not running"
-
-	mono $BUILD_SOURCESDIRECTORY/build/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/nunit3-console.exe \
-		--result=$UNO_RERUN_TEST_RESULTS \
-		--timeout=120000 \
-		--testlist $UNO_TESTS_FAILED_LIST \
-		$BUILD_SOURCESDIRECTORY/src/SamplesApp/SamplesApp.UITests/bin/Release/net47/SamplesApp.UITests.dll \
-		|| true
-fi
