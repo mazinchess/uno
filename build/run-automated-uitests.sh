@@ -24,9 +24,9 @@ export UNO_TESTS_FAILED_LIST=$BUILD_SOURCESDIRECTORY/build/uitests-failure-resul
 export TEST_FILTERS="namespace != 'SamplesApp.UITests.Snap'"
 
 if [ -f "$UNO_TESTS_FAILED_LIST" ]; then
-    export UNO_TESTS_NUNIT_FILTER="--testlist "$UNO_TESTS_FAILED_LIST""
+    export UNO_TESTS_NUNIT_FILTER="--testlist \x22$UNO_TESTS_FAILED_LIST\x22"
 else
-    export UNO_TESTS_NUNIT_FILTER="--where \"$TEST_FILTERS\""
+    export UNO_TESTS_NUNIT_FILTER="--where \x22$TEST_FILTERS\x22"
 fi
 
 export NUNIT_VERSION=3.11.1

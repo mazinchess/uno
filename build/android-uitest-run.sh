@@ -95,9 +95,9 @@ mkdir -p $UNO_UITEST_SCREENSHOT_PATH
 cd $UNO_UITEST_SCREENSHOT_PATH
 
 if [ -f "$UNO_TESTS_FAILED_LIST" ]; then
-    export UNO_TESTS_NUNIT_FILTER="--testlist "$UNO_TESTS_FAILED_LIST""
+    export UNO_TESTS_NUNIT_FILTER="--testlist \x22$UNO_TESTS_FAILED_LIST\x22"
 else
-    export UNO_TESTS_NUNIT_FILTER="--where \"$TEST_FILTERS\""
+    export UNO_TESTS_NUNIT_FILTER="--where \x22$TEST_FILTERS\x22"
 fi
 
 mono $BUILD_SOURCESDIRECTORY/build/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/nunit3-console.exe \

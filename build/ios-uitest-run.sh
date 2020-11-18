@@ -87,9 +87,9 @@ export UNO_RERUN_TEST_RESULTS=$BUILD_SOURCESDIRECTORY/build/TestResult-failed-re
 export UNO_TESTS_FAILED_LIST=$BUILD_SOURCESDIRECTORY/build/uitests-failure-results/failed-tests-ios-$SCREENSHOTS_FOLDERNAME.txt
 
 if [ -f "$UNO_TESTS_FAILED_LIST" ]; then
-    export UNO_TESTS_NUNIT_FILTER="--testlist "$UNO_TESTS_FAILED_LIST""
+    export UNO_TESTS_NUNIT_FILTER="--testlist \x22$UNO_TESTS_FAILED_LIST\x22"
 else
-    export UNO_TESTS_NUNIT_FILTER="--where \"$TEST_FILTERS\""
+    export UNO_TESTS_NUNIT_FILTER="--where \x22$TEST_FILTERS\x22"
 fi
 
 mono $BUILD_SOURCESDIRECTORY/build/NUnit.ConsoleRunner.$NUNIT_VERSION/tools/nunit3-console.exe \
